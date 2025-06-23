@@ -1,25 +1,27 @@
-
-import { Injectable } from '@nestjs/common';
-
+import { ConflictException, Injectable } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UserRepository } from './csv-user.repository';
+import * as bcrypt from 'bcrypt';
 // This should be a real class/interface representing a user entity
-export type User = any;
 
 @Injectable()
 export class UsersService {
-  private readonly users = [
-    {
-      userId: 1,
-      username: 'john',
-      password: 'changeme',
-    },
-    {
-      userId: 2,
-      username: 'maria',
-      password: 'guess',
-    },
-  ];
+  constructor(private usersRepo: UserRepository) {}
 
-  async findOne(username: string): Promise<User | undefined> {
-    return this.users.find(user => user.username === username);
+  async findOne(username: string) {
+    return this.usersRepo.findByName(username);
+  }
+
+  async create({ name, password }: CreateUserDto) {
+    const exitUser = await this.usersRepo.findByName(name);
+    if (exitUser) throw new ConflictException('Usario ja cadastrado');
+    const salt = await bcrypt.genSalt();
+    const hashed = await bcrypt.hash(password, salt);
+    const { id, ...rest } = await this.usersRepo.create({
+      name,
+      password: hashed,
+    });
+
+    return rest;
   }
 }

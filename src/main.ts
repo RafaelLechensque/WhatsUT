@@ -1,14 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
+import { ValidationPipe } from '@nestjs/common';
+import { ensureCsvFileExists } from './users/csv-user.repository';
 async function bootstrap() {
+  await ensureCsvFileExists();
+
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
+
+  app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
     .setTitle('ZAP ZAP 2')
     .setDescription('bora passar')
-    .setVersion('1.0')
+    .setVersion('2.9.9')
+    .addBearerAuth()
     // .addTag('cats')
     .build();
 
