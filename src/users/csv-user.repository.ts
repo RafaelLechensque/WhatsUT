@@ -47,7 +47,10 @@ export class UserRepository {
 
     await new Promise((resolve, reject) => {
       const writableStream = fs.createWriteStream(CSV_FILE, { flags: 'a' });
-      writeToStream(writableStream, row, { headers: false })
+      writeToStream(writableStream, row, {
+        headers: false,
+        includeEndRowDelimiter: true,
+      })
         .on('error', reject)
         .on('finish', () => resolve(undefined));
     });

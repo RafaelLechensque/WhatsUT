@@ -17,11 +17,11 @@ export class UsersService {
     if (exitUser) throw new ConflictException('Usario ja cadastrado');
     const salt = await bcrypt.genSalt();
     const hashed = await bcrypt.hash(password, salt);
-    const { id, ...rest } = await this.usersRepo.create({
+    const { id, name: a } = await this.usersRepo.create({
       name,
       password: hashed,
     });
 
-    return rest;
+    return a;
   }
 }
