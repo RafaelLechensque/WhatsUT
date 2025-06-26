@@ -6,7 +6,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   name: string;
-  
+
   @ApiProperty({
     example: 'senha123',
   })

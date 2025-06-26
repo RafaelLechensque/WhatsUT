@@ -1,29 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { User } from './users.entity';
+import { User } from './entities/users.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse, writeToStream } from 'fast-csv';
 import { CreateUserDto } from './dto/create-user.dto';
 import { v4 } from 'uuid';
 
-const CSV_FILE = path.resolve(__dirname, '../../data/users.csv');
-const CSV_HEADERS = 'id,name,password\n';
-
-export async function ensureCsvFileExists() {
-  try {
-    await fs.promises.access(CSV_FILE);
-  } catch {
-    await fs.promises.mkdir(path.dirname(CSV_FILE), { recursive: true });
-    await fs.promises.writeFile(CSV_FILE, CSV_HEADERS);
-  }
-}
+export const CSV_FILE_USER = path.resolve(__dirname, '../../data/users.csv');
+export const CSV_HEADERS_USER = 'id,name,password\n';
 
 @Injectable()
 export class UserRepository {
   async findAll(): Promise<User[]> {
     return new Promise((resolve, reject) => {
       const users: User[] = [];
-      fs.createReadStream(CSV_FILE)
+      fs.createReadStream(CSV_FILE_USER)
         .pipe(parse({ headers: true }))
         .on('error', reject)
         .on('data', (row) => users.push(row))
@@ -46,7 +37,9 @@ export class UserRepository {
     const row = [user];
 
     await new Promise((resolve, reject) => {
-      const writableStream = fs.createWriteStream(CSV_FILE, { flags: 'a' });
+      const writableStream = fs.createWriteStream(CSV_FILE_USER, {
+        flags: 'a',
+      });
       writeToStream(writableStream, row, {
         headers: false,
         includeEndRowDelimiter: true,

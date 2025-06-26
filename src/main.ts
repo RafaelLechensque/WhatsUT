@@ -2,9 +2,19 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { ensureCsvFileExists } from './users/csv-user.repository';
+import { ensureCsvFileExists } from './utils/CSV';
+import { CSV_FILE_USER, CSV_HEADERS_USER } from './users/csv-user.repository';
+import { CSV_FILE_GROUP, CSV_HEADERS_GROUP } from './group/group.repository';
 async function bootstrap() {
-  await ensureCsvFileExists();
+  await ensureCsvFileExists({
+    CSV_FILE: CSV_FILE_USER,
+    CSV_HEADERS: CSV_HEADERS_USER,
+  });
+
+  await ensureCsvFileExists({
+    CSV_FILE: CSV_FILE_GROUP,
+    CSV_HEADERS: CSV_HEADERS_GROUP,
+  });
 
   const app = await NestFactory.create(AppModule);
   app.enableCors();
