@@ -29,4 +29,9 @@ export class AuthService {
     const payload = { name: user.name, sub: user.id };
     return { access_token: this.jwtService.sign(payload) };
   }
+
+  async singOut(id: string) {
+    this.onlineUsers.removeUser(id);
+    return 'Sucesso';
+  }
 }
