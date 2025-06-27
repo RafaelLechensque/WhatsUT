@@ -12,8 +12,6 @@ export const CSV_HEADERS_GROUP = 'id,name,adminsId,members,pendingRequests\n';
 
 @Injectable()
 export class GroupRepository {
-  private groups: Group[] = [];
-
   async findAll(): Promise<Group[]> {
     return new Promise((resolve, reject) => {
       const groups: Group[] = [];

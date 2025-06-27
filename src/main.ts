@@ -5,16 +5,15 @@ import { ValidationPipe } from '@nestjs/common';
 import { ensureCsvFileExists } from './utils/CSV';
 import { CSV_FILE_USER, CSV_HEADERS_USER } from './users/csv-user.repository';
 import { CSV_FILE_GROUP, CSV_HEADERS_GROUP } from './group/group.repository';
+import { CSV_FILE_CHAT, CSV_HEADERS_CHAT } from './chat/chat.repository';
 async function bootstrap() {
-  await ensureCsvFileExists({
-    CSV_FILE: CSV_FILE_USER,
-    CSV_HEADERS: CSV_HEADERS_USER,
-  });
+  const csvFilesToCheck = [
+    { CSV_FILE: CSV_FILE_USER, CSV_HEADERS: CSV_HEADERS_USER },
+    { CSV_FILE: CSV_FILE_GROUP, CSV_HEADERS: CSV_HEADERS_GROUP },
+    { CSV_FILE: CSV_FILE_CHAT, CSV_HEADERS: CSV_HEADERS_CHAT },
+  ];
 
-  await ensureCsvFileExists({
-    CSV_FILE: CSV_FILE_GROUP,
-    CSV_HEADERS: CSV_HEADERS_GROUP,
-  });
+  await Promise.all(csvFilesToCheck.map(ensureCsvFileExists));
 
   const app = await NestFactory.create(AppModule);
   app.enableCors();
