@@ -1,3 +1,5 @@
+// src/chat/chat.controller.ts
+
 import {
   Controller,
   Get,
@@ -6,21 +8,40 @@ import {
   Param,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { ChatRepository } from './chat.repository';
 import { MessageDto } from './dto/create-message';
+import { CreateChatDto } from './dto/create-chat.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('chat')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-  constructor(private readonly chatRepo: ChatRepository) {}
+  constructor(
+    private readonly chatRepo: ChatRepository,
+    private readonly userServer: UsersService,
+  ) {}
 
   @Get('private/:userId')
   async getPrivateMessages(@Request() req, @Param('userId') otherId: string) {
     return this.chatRepo.findPrivateChat(req.user.id, otherId);
+  }
+  @Get('private')
+  async getMyPrivateMessages(@Request() req) {
+    const id = req.user.id;
+    const ids: string[] = (await this.chatRepo.findMyPrivateChat(id)).map(
+      (c) => (c.senderId === id ? c.targetId : c.senderId),
+    );
+
+    return this.userServer.findByids(ids);
   }
   @Get('group/:groupId')
   async getGroupMessages(@Request() req, @Param('groupId') otherId: string) {
@@ -56,28 +77,112 @@ export class ChatController {
     });
   }
 
-  // @Post()
-  // create(@Body() createChatDto: CreateChatDto) {
-  //   return this.chatService.create(createChatDto);
-  // }
+  @Post('private/:userId/file')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          return cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
+  async sendPrivateFile(
+    @Request() req,
+    @Param('userId') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const id: string = req.user.id;
+    console.log(
+      'sendPrivateFile (Controller): File object received by Multer:',
+      file,
+    );
+    console.log('sendPrivateFile (Controller): File path:', file.path);
 
-  // @Get()
-  // findAll() {
-  //   return this.chatService.findAll();
-  // }
+    const messageToSend: CreateChatDto = {
+      chatType: 'private',
+      content: file.path,
+      senderId: id,
+      targetId: userId,
+      isArquivo: true,
+    };
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.chatService.findOne(+id);
-  // }
+    console.log(
+      'sendPrivateFile (Controller): Message object to ChatRepository.send:',
+      messageToSend,
+    );
+    return await this.chatRepo.send(messageToSend);
+  }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateChatDto: UpdateChatDto) {
-  //   return this.chatService.update(+id, updateChatDto);
-  // }
+  // NOVO ENDPOINT: Enviar arquivo para um grupo
+  @Post('group/:groupId/file')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads', // Salva o arquivo no diretório 'uploads'
+        filename: (req, file, cb) => {
+          const randomName = Array(32) // Gera um nome de arquivo aleatório
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          return cb(null, `${randomName}${extname(file.originalname)}`); // Concatena com a extensão original
+        },
+      }),
+    }),
+  )
+  async sendGroupFile(
+    @Request() req,
+    @Param('groupId') groupId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const id: string = req.user.id;
+    console.log(
+      'sendGroupFile (Controller): File object received by Multer:',
+      file,
+    );
+    // console.log('sendGroupFile (Controller): File path:', file.path);
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.chatService.remove(+id);
-  // }
+    const messageToSend: CreateChatDto = {
+      chatType: 'group',
+      content: file.path, // Salva o caminho do arquivo como conteúdo da mensagem
+      senderId: id,
+      targetId: groupId,
+      isArquivo: true, // Marca a mensagem como um arquivo
+    };
+
+    // console.log(
+    //   'sendGroupFile (Controller): Message object to ChatRepository.send:',
+    //   messageToSend,
+    // );
+    return await this.chatRepo.send(messageToSend);
+  }
 }

@@ -1,0 +1,363 @@
+/* Arquivo: frontend/src/pages/LoginPage.module.css */
+
+/* Define a fonte Inter como padrão para a página inteira */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.container {
+    min-height: 100vh;
+    background: linear-gradient(to top, #b2eaee, #080f1d); ; /* Cor de fundo principal (dark) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem; /* Reduz padding em telas menores */
+    box-sizing: border-box; /* Garante que padding não cause overflow */
+}
+
+.grid {
+    width: 100%;
+    max-width: 64rem; /* max-w-6xl */
+    display: grid;
+    grid-template-columns: 1fr; /* Padrão: uma coluna (empilhado) */
+    gap: 2.5rem; /* Reduz gap em telas menores */
+    align-items: center;
+}
+
+/* Telas médias (tablets e desktops pequenos) */
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(1, 1fr); /* Continua empilhado, mas com mais espaço */
+        gap: 3rem;
+    }
+
+    .container {
+        padding: 2rem;
+    }
+}
+
+/* Telas grandes (desktops) */
+@media (min-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr); /* Duas colunas em telas maiores */
+        gap: 4rem;
+    }
+}
+
+.infoSide {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Reduz gap em telas menores */
+    text-align: center;
+    padding: 0 1rem; /* Padding horizontal para evitar que o texto encoste nas bordas em telas muito pequenas */
+}
+
+@media (min-width: 1024px) {
+    .infoSide {
+        text-align: left;
+        padding: 0; /* Remove padding extra em telas grandes */
+    }
+}
+
+.title {
+    font-size: 2rem; /* Reduz fonte em telas menores */
+    font-weight: 800;
+    color: #f9fafb; /* gray-50 */
+    line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+    .title {
+        font-size: 2.5rem; /* Aumenta fonte para telas médias */
+    }
+}
+
+@media (min-width: 1024px) {
+    .title {
+        font-size: 3rem; /* Fonte maior em telas grandes */
+    }
+}
+
+.title span {
+    color: #3b82f6; /* blue-500 */
+}
+
+.description {
+    font-size: 1rem; /* Reduz fonte em telas menores */
+    color: #9ca3af; /* gray-400 */
+    line-height: 1.6; /* Ajusta line-height */
+}
+
+@media (min-width: 768px) {
+    .description {
+        font-size: 1.125rem;
+    }
+}
+
+
+.featuresGrid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr); /* Padrão: uma coluna em telas pequenas */
+    gap: 1.5rem; /* Reduz gap em telas menores */
+    padding-top: 1rem;
+    max-width: 400px; /* Limita a largura em telas pequenas para não esticar demais */
+    margin: 0 auto; /* Centraliza o grid de features */
+}
+
+@media (min-width: 500px) { /* Exemplo: a partir de 500px, duas colunas */
+    .featuresGrid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: none; /* Remove a limitação de largura */
+    }
+}
+
+@media (min-width: 1024px) {
+    .featuresGrid {
+        gap: 2rem;
+        margin: 0; /* Remove a centralização */
+    }
+}
+
+.feature {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center; /* Centraliza itens da feature */
+    text-align: center;
+}
+
+@media (min-width: 1024px) {
+    .feature {
+        align-items: flex-start; /* Alinha à esquerda em telas grandes */
+        text-align: left;
+    }
+}
+
+
+.iconWrapper {
+    width: 36px; /* Ajusta tamanho do ícone */
+    height: 36px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 768px) {
+    .iconWrapper {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+
+.feature h3 {
+    font-weight: 600;
+    font-size: 0.95rem; /* Ajusta fonte */
+    color: #f3f4f6; /* gray-100 */
+}
+
+@media (min-width: 768px) {
+    .feature h3 {
+        font-size: 1rem;
+    }
+}
+
+.feature p {
+    font-size: 0.8rem; /* Ajusta fonte */
+    color: #000000; /* gray-400 */
+}
+
+@media (min-width: 768px) {
+    .feature p {
+        font-size: 0.875rem;
+    }
+}
+
+
+.formContainer {
+    width: 100%;
+    max-width: 24rem; /* Reduz max-width em telas menores */
+    margin: auto;
+}
+
+@media (min-width: 768px) {
+    .formContainer {
+        max-width: 26rem;
+    }
+}
+
+.card {
+    background-color: #1f2937; /* gray-800 */
+    border-radius: 1rem;
+    border: 1px solid #374151; /* gray-700 */
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    overflow: hidden;
+}
+
+.cardContent {
+    padding: 2rem; /* Reduz padding em telas menores */
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem; /* Reduz gap */
+}
+
+@media (min-width: 768px) {
+    .cardContent {
+        padding: 2.5rem;
+        gap: 1.5rem;
+    }
+}
+
+.formHeader {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem; /* Reduz gap */
+}
+
+.formIcon {
+    width: 46px; /* Ajusta tamanho do ícone */
+    height: 46px;
+    border-radius: 50%;
+    background-color: #1e40af; /* Fundo do ícone azul escuro */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dbeafe; /* Ícone azul claro */
+}
+
+@media (min-width: 768px) {
+    .formIcon {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+
+.formTitle {
+    font-size: 1.6rem; /* Ajusta fonte */
+    font-weight: 700;
+    color: #f9fafb; /* gray-50 */
+}
+
+@media (min-width: 768px) {
+    .formTitle {
+        font-size: 1.875rem;
+    }
+}
+
+.formDescription {
+    color: #9ca3af; /* gray-400 */
+    font-size: 0.85rem; /* Ajusta fonte */
+}
+
+@media (min-width: 768px) {
+    .formDescription {
+        font-size: 0.875rem;
+    }
+}
+
+
+.inputGroup {
+    position: relative;
+}
+
+.input {
+    width: 100%;
+    padding: 0.65rem 1rem; /* Ajusta padding */
+    box-sizing: border-box;
+    margin-bottom: 0.75rem; /* Ajusta margem */
+    padding-right: 2.5rem;
+    border: 1px solid #4b5563; /* gray-600 */
+    border-radius: 0.5rem;
+    font-size: 0.85rem; /* Ajusta fonte */
+    background-color: #374151; /* gray-700 */
+    color: #f3f4f6; /* gray-100 */
+}
+
+@media (min-width: 768px) {
+    .input {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+}
+
+
+.input::placeholder {
+    color: #9ca3af; /* gray-400 */
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6; /* blue-500 */
+    box-shadow: 0 0 0 2px #1f2937, 0 0 0 4px #3b82f6;
+}
+
+.inputIcon {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    color: #9ca3af; /* gray-400 */
+}
+
+.button {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    color: white;
+    background-color: #2563eb; /* blue-600 */
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button:hover {
+    background-color: #1d4ed8; /* blue-700 */
+}
+
+.button:disabled {
+    background-color: #1e40af; /* blue-800 */
+    cursor: not-allowed;
+}
+
+.error {
+    text-align: center;
+    color: #f87171; /* red-400 */
+    font-size: 0.8rem; /* Ajusta fonte */
+}
+
+@media (min-width: 768px) {
+    .error {
+        font-size: 0.875rem;
+    }
+}
+
+.toggleContainer {
+    text-align: center;
+    font-size: 0.8rem; /* Ajusta fonte */
+    color: #9ca3af; /* gray-400 */
+}
+
+@media (min-width: 768px) {
+    .toggleContainer {
+        font-size: 0.875rem;
+    }
+}
+
+.toggleButton {
+    font-weight: 600;
+    color: #3b82f6; /* blue-500 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.25rem;
+}
+
+.toggleButton:hover {
+    text-decoration: underline;
+}

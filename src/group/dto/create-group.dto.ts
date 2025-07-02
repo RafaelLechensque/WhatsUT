@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsIn } from 'class-validator';
+import { LastAdminRule } from '../entities/group.entity';
 
 export class CreateGroupDto {
   @ApiProperty({
@@ -20,4 +21,15 @@ export class CreateGroupDto {
     ],
   })
   members: string[];
+
+
+@ApiProperty({
+  description: "Regra para quando o último admin sair: 'promote' ou 'delete'",
+  example: 'promote',
+  required: false, // O campo é opcional
+  enum: ['promote', 'delete'],
+})
+@IsOptional()
+@IsIn(['promote', 'delete'])
+lastAdminRule?: LastAdminRule;
 }

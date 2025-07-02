@@ -1,0 +1,10 @@
+/* Arquivo: frontend/src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ADICIONAR #root AOS SELETORES */
+html, body, #root { 
+  
+  margin: 0; /* Remove margens padrão do navegador */
+}

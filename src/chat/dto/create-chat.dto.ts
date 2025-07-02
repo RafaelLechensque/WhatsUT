@@ -15,4 +15,5 @@ export class CreateChatDto {
   content: string;
   chatType: 'private' | 'group';
   targetId: string;
+  isArquivo?: boolean; 
 }

@@ -5,4 +5,5 @@ export class Chat {
   timestamp: Date;
   chatType: 'private' | 'group';
   targetId: string;
+  isArquivo?: boolean;
 }

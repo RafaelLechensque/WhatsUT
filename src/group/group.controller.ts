@@ -1,3 +1,5 @@
+// Arquivo: src/group/group.controller.ts
+
 import {
   Controller,
   Get,
@@ -6,10 +8,11 @@ import {
   Param,
   Request,
   ForbiddenException,
-  Response,
   UseGuards,
-  Put,
   Patch,
+  Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { GroupRepository } from './group.repository';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
@@ -23,198 +26,197 @@ export class GroupController {
   constructor(private readonly groupRepo: GroupRepository) {}
 
   @Get('my')
-  @ApiResponse({
-    example: [
-      {
-        id: '52aef205-61ff-47a2-8692-9ed4ef2328a7',
-        name: 'Jogo do bicho',
-        adminsId: [
-          'bb145801-dd77-4e34-bdea-bee5dd790f3e',
-          '66cb214f-bedf-4830-b85e-5c02507ed9e5',
-        ],
-        members: [
-          'bb145801-dd77-4e34-bdea-bee5dd790f3e',
-          '6ee878d0-e36c-4596-a249-46f2cd948146',
-          '66cb214f-bedf-4830-b85e-5c02507ed9e5',
-        ],
-        pendingRequests: [],
-      },
-      {
-        id: '6141b8f9-7f9d-4d4b-901c-e59f77c7bb0d',
-        name: 'Tigrio',
-        adminsId: ['66cb214f-bedf-4830-b85e-5c02507ed9e5'],
-        members: ['66cb214f-bedf-4830-b85e-5c02507ed9e5'],
-        pendingRequests: [],
-      },
-    ],
-  })
   async myGroups(@Request() req) {
     return await this.groupRepo.findMyGroups(req.user.id);
   }
+
   @Get()
-  @ApiResponse({
-    example: [
-      {
-        id: '52aef205-61ff-47a2-8692-9ed4ef2328a7',
-        name: 'Jogo do bicho',
-        adminsId: [
-          'bb145801-dd77-4e34-bdea-bee5dd790f3e',
-          '66cb214f-bedf-4830-b85e-5c02507ed9e5',
-        ],
-        members: [
-          'bb145801-dd77-4e34-bdea-bee5dd790f3e',
-          '6ee878d0-e36c-4596-a249-46f2cd948146',
-          '66cb214f-bedf-4830-b85e-5c02507ed9e5',
-        ],
-        pendingRequests: [],
-      },
-      {
-        id: '6141b8f9-7f9d-4d4b-901c-e59f77c7bb0d',
-        name: 'Tigrio',
-        adminsId: ['66cb214f-bedf-4830-b85e-5c02507ed9e5'],
-        members: ['66cb214f-bedf-4830-b85e-5c02507ed9e5'],
-        pendingRequests: [],
-      },
-    ],
-  })
-  async findAll(@Request() req) {
+  async findAll() {
     return await this.groupRepo.findAll();
   }
 
   @Post('create')
-  @ApiResponse({
-    example: {
-      id: '52aef205-61ff-47a2-8692-9ed4ef2328a7',
-      name: 'Jogo do bicho',
-      adminsId:
-        'bb145801-dd77-4e34-bdea-bee5dd790f3e;66cb214f-bedf-4830-b85e-5c02507ed9e5',
-      members:
-        'bb145801-dd77-4e34-bdea-bee5dd790f3e;6ee878d0-e36c-4596-a249-46f2cd948146;66cb214f-bedf-4830-b85e-5c02507ed9e5',
-    },
-  })
   async create(
     @Request() req,
-    @Body() { adminsId, members, name }: CreateGroupDto,
+    @Body() createGroupDto: CreateGroupDto,
   ) {
     const { id }: { id: string } = req.user;
 
-    if (!members) {
-      members = [id];
-    } else if (!members.includes(id)) {
-      members = [...members, id];
+
+    const members = createGroupDto.members || [];
+    if (!members.includes(id)) {
+      members.push(id);
     }
 
-    if (!adminsId) {
-      adminsId = [id];
-    } else if (!adminsId.includes(id)) {
-      adminsId = [...adminsId, id];
+    const adminsId = createGroupDto.adminsId || [];
+    if (!adminsId.includes(id)) {
+      adminsId.push(id);
     }
 
     return await this.groupRepo.create({
-      name,
-      adminsId,
+      ...createGroupDto,
       members,
+      adminsId,
     });
   }
 
   @Patch(':id/join')
   @ApiResponse({ description: 'Pedir para entrar em um grupo' })
   async join(@Request() req, @Param('id') groupId: string) {
-    const { id }: { id: string } = req.user;
-
+    const { id: userId }: { id: string } = req.user;
     const group = await this.groupRepo.findById(groupId);
 
     if (!group) {
-      throw new ForbiddenException('Grupo nao encontrado');
+      throw new ForbiddenException('Grupo não encontrado');
     }
-    if (group.pendingRequests.includes(id)) {
+    if (group.pendingRequests.includes(userId) || group.members.includes(userId)) {
       throw new ForbiddenException(
-        'Este usuarios ja esta pentendes para virar membros',
+        'Usuário já é membro ou tem uma solicitação pendente.',
       );
     }
 
-    group.pendingRequests.push(id);
-
+    group.pendingRequests.push(userId);
     return await this.groupRepo.update(group);
   }
 
   @Patch(':id/approve/:userId')
-  @ApiResponse({ description: 'Aprovar um usuario' })
+  @ApiResponse({ description: 'Aprovar um usuário para entrar no grupo' })
   async approve(
     @Request() req,
     @Param('id') groupId: string,
-    @Param('userId') userId: string,
+    @Param('userId') userIdToApprove: string,
   ) {
-    const { id }: { id: string } = req.user;
-
+    const { id: adminId }: { id: string } = req.user;
     const group = await this.groupRepo.findById(groupId);
 
     if (!group) {
-      throw new ForbiddenException('Grupo nao encontrado');
+      throw new ForbiddenException('Grupo não encontrado');
     }
-    if (!group.adminsId.includes(id)) {
-      throw new ForbiddenException('Apenas os Admins pode aprovar membros');
+    if (!group.adminsId.includes(adminId)) {
+      throw new ForbiddenException('Apenas administradores podem aprovar membros');
     }
-    if (!group.pendingRequests.includes(userId)) {
+    if (!group.pendingRequests.includes(userIdToApprove)) {
       throw new ForbiddenException(
-        'Apenas os usuarios pentendes pode vira membros',
+        'Este usuário não possui uma solicitação pendente.',
       );
     }
 
-    group.members.push(userId);
-    group.pendingRequests = group.pendingRequests.filter((g) => g !== userId);
-
-    // this.groupRepo.approveMember(groupId, userId);
+    group.members.push(userIdToApprove);
+    group.pendingRequests = group.pendingRequests.filter((id) => id !== userIdToApprove);
     return await this.groupRepo.update(group);
   }
 
   @Patch(':id/reject/:userId')
-  @ApiResponse({ description: 'Rejeitar o usuario pendente' })
+  @ApiResponse({ description: 'Rejeitar um usuário pendente' })
   async reject(
     @Request() req,
     @Param('id') groupId: string,
-    @Param('userId') userId: string,
+    @Param('userId') userIdToReject: string,
   ) {
-    const { id }: { id: string } = req.user;
-
+    const { id: adminId }: { id: string } = req.user;
     const group = await this.groupRepo.findById(groupId);
-    if (!group) {
-      throw new ForbiddenException('Grupo nao encontrado');
-    }
-    if (!group.adminsId.includes(id)) {
-      throw new ForbiddenException('Apenas o admins pode rejeitar membros');
-    }
-    group.pendingRequests = group.pendingRequests.filter((g) => g !== userId);
 
-    await this.groupRepo.update(group);
-    return group;
+    if (!group) {
+      throw new ForbiddenException('Grupo não encontrado');
+    }
+    if (!group.adminsId.includes(adminId)) {
+      throw new ForbiddenException('Apenas administradores podem rejeitar membros');
+    }
+
+    group.pendingRequests = group.pendingRequests.filter((id) => id !== userIdToReject);
+    return await this.groupRepo.update(group);
   }
 
   @Patch(':id/ban/:userId')
-  @ApiResponse({ description: 'Remove membro do grupo' })
+  @ApiResponse({ description: 'Banir um membro do grupo' })
   async ban(
     @Request() req,
     @Param('id') groupId: string,
-    @Param('userId') userId: string,
+    @Param('userId') userIdToBan: string,
   ) {
-    const { id }: { id: string } = req.user;
-
+    const { id: adminId }: { id: string } = req.user;
     const group = await this.groupRepo.findById(groupId);
+
     if (!group) {
-      throw new ForbiddenException('Grupo nao encontrado');
+      throw new ForbiddenException('Grupo não encontrado');
     }
-    if (!group.adminsId.includes(id)) {
-      throw new ForbiddenException('Apenas o admins pode banir do membros');
+    if (!group.adminsId.includes(adminId)) {
+      throw new ForbiddenException('Apenas administradores podem banir membros.');
+    }
+    if (!group.members.includes(userIdToBan)) {
+      throw new ForbiddenException('Usuário não é membro deste grupo.');
+    }
+    if (adminId === userIdToBan) {
+      throw new ForbiddenException('Um administrador não pode se banir.');
+    }
+
+    group.members = group.members.filter((id) => id !== userIdToBan);
+    group.adminsId = group.adminsId.filter((id) => id !== userIdToBan);
+
+    return await this.groupRepo.update(group);
+  }
+
+  @Delete(':id/leave')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiResponse({ status: 204, description: 'Sair de um grupo' })
+  async leaveGroup(@Request() req, @Param('id') groupId: string) {
+    const { id: userId }: { id: string } = req.user;
+    const group = await this.groupRepo.findById(groupId);
+
+    if (!group) {
+      throw new ForbiddenException('Grupo não encontrado');
     }
     if (!group.members.includes(userId)) {
-      throw new ForbiddenException('Usuario nao esta no grupo');
+      throw new ForbiddenException('Usuário não é membro deste grupo');
     }
+
+    group.members = group.members.filter((id) => id !== userId);
+
     if (group.adminsId.includes(userId)) {
-      group.adminsId = group.adminsId.filter((g) => g !== userId);
+      group.adminsId = group.adminsId.filter((id) => id !== userId);
+
+      if (group.adminsId.length === 0) {
+        if (group.lastAdminRule === 'delete' || group.members.length === 0) {
+          await this.groupRepo.delete(groupId);
+          return;
+        }
+        else if (group.lastAdminRule === 'promote' && group.members.length > 0) {
+          group.adminsId.push(group.members[0]);
+        }
+      }
     }
-    group.members = group.members.filter((g) => g !== userId);
 
     await this.groupRepo.update(group);
-    return group;
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiResponse({ status: 204, description: 'Excluir um grupo' })
+  async deleteGroup(@Request() req, @Param('id') groupId: string) {
+    const { id: userId }: { id: string } = req.user;
+
+    const group = await this.groupRepo.findById(groupId);
+
+    if (!group) {
+      throw new ForbiddenException('Grupo não encontrado.');
+    }
+
+    if (!group.adminsId.includes(userId)) {
+      throw new ForbiddenException('Apenas administradores podem excluir o grupo.');
+    }
+
+    await this.groupRepo.delete(groupId);
+  }
+
+
+  @Patch('ban-user/:userId')
+  @ApiResponse({ description: 'Requisitar o banimento de um usuário da aplicação (simulado)' })
+  async banUserFromApp(@Request() req, @Param('userId') userIdToBan: string) {
+    console.log(
+      `O usuário ${req.user.name} (${req.user.id}) requisitou o banimento do usuário ${userIdToBan}`,
+    );
+    return {
+      message: `Requisição para banir o usuário ${userIdToBan} foi registrada.`,
+    };
   }
 }
